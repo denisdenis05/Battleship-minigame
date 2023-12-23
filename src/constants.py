@@ -1,0 +1,37 @@
+HIT_TILE = 1
+EMPTY_TILE = 0
+DIMENSION_OF_BOARD = 10
+
+INDEX_OF_LINE_COORDINATES = 0
+INDEX_OF_COLUMN_COORDINATES = 1
+
+SHIP_IS_HORIZONTAL = 0
+SHIP_IS_VERTICAL = 1
+
+STARTING_NUMBER_OF_HITS = 0
+
+
+VALUE_TO_ADD_SO_LAST_ELEMENT_IS_CONSIDERED = 1
+
+
+
+LENGTH_OF_SHIPS = {
+    0: 2,
+    1: 3,
+    2: 3,
+    3: 4,
+    4: 5
+}
+
+NAME_OF_SHIPS = {
+    0: "Patrol Boat",
+    1: "Submarine",
+    2: "Destroyer",
+    3: "Battleship",
+    4: "Carrier"
+}
+
+LOCATION_OF_BACKGROUND_IMAGE_RELATIVE_TO_START = "./images/background_image.jpg"
+MEDIUM_BUTTON_DIMENSIONS = (200, 50)
+
+COORDINATES_OF_STARTING_SCREEN = (0, 0)
