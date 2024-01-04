@@ -147,6 +147,7 @@ class BuildBoardMenu:
     # ---------------------------------------
 
 
+
     def getShipIdFromButtonName(self, buttonName):
         for shipId, shipName in enumerate(self.__buttons):
             if buttonName == shipName:
