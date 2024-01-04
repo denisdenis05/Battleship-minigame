@@ -2,10 +2,12 @@
 import pygame
 import sys
 from src import constants
+from src.services.services import Services
 
 
 class BuildBoardMenu:
     def __init__(self):
+        self.__services = Services()
         pygame.init()
 
         self.__checkmarkIcon = pygame.image.load(constants.LOCATION_OF_CHECKMARK_ICON)
@@ -126,9 +128,14 @@ class BuildBoardMenu:
         self.__screenWindow.blit(leftSideSectionSurface, self.__leftSectionOfScreen.topleft)
 
     def drawBoard(self):
-        for boardGridRow in self.__gridRectangles:
-            for positionOfRectangleToDraw in boardGridRow:
-                pygame.draw.rect(self.__screenWindow, constants.COLOR_LIGHT_BLUE, positionOfRectangleToDraw)
+        for lineNumber, boardGridRow in enumerate(self.__gridRectangles):
+            for columnNumber, positionOfRectangleToDraw in enumerate(boardGridRow):
+                positionOfTileOnGrid = (columnNumber, lineNumber)
+                typeOfShipOnTheTile = self.__services.checkIfTileIsOccupiedOnUserBoard(positionOfTileOnGrid)
+                if typeOfShipOnTheTile == constants.EMPTY_TILE:
+                    pygame.draw.rect(self.__screenWindow, constants.COLOR_LIGHT_BLUE, positionOfRectangleToDraw)
+                else:
+                    pygame.draw.rect(self.__screenWindow, constants.COLOR_OF_TILES_FOR_SHIP[typeOfShipOnTheTile], positionOfRectangleToDraw)
 
 
     def drawMenuTitle(self):
@@ -138,7 +145,6 @@ class BuildBoardMenu:
     # ---------------------------------------
     # LOGIC DOWN HERE
     # ---------------------------------------
-
 
     def getShipIdFromButtonName(self, buttonName):
         for shipId, shipName in enumerate(self.__buttons):
@@ -156,13 +162,25 @@ class BuildBoardMenu:
             return
         self.selectedShipDirection = self.getShipDirectionFromButtonName(buttonName)
 
+    def wasEveryShipAddedToBoard(self):
+        for ship in self.__counterIfShipWasAdded:
+            if ship == constants.THIS_SHIP_WAS_NOT_ADDED:
+                return False
+        return True
 
     def onTilePress(self, tileCoordinates):
         if self.selectedShip is None or self.selectedShipDirection is None:
             return
         self.selectedShipPosition = tileCoordinates
-        # TODO try to add ship here
-
+        addedShipToBoard = self.__services.addShipToUserBoard(self.selectedShip, self.selectedShipPosition, self.selectedShipDirection)
+        if addedShipToBoard:
+            self.__counterIfShipWasAdded[self.selectedShip] = constants.THIS_SHIP_WAS_ADDED
+            self.selectedShip = None
+            self.selectedShipDirection = None
+            self.selectedShipPosition = None
+            if self.wasEveryShipAddedToBoard():
+                shouldEnterGame = True
+                return shouldEnterGame
 
     # ---------------------------------------
     # EVENT HANDLERS DOWN HERE
@@ -207,13 +225,13 @@ class BuildBoardMenu:
                 self.onButtonPress(buttonName)
             elif type(objectThatUserClickedOn) == tuple:
                 coordinatesOfTile = objectThatUserClickedOn
-                self.onTilePress(coordinatesOfTile)
+                return self.onTilePress(coordinatesOfTile)
 
     def checkEvent(self, eventToCheck):
         if eventToCheck.type == pygame.QUIT:
             self.quitGame()
         if eventToCheck.type == pygame.MOUSEBUTTONDOWN:
-            self.handleMouseClick(eventToCheck)
+            return self.handleMouseClick(eventToCheck)
 
 
     def eventLoop(self):
@@ -222,8 +240,9 @@ class BuildBoardMenu:
 
     def gameLoop(self):
         while True:
-            self.eventLoop()
-
+            shouldEnterGame = self.eventLoop()
+            if shouldEnterGame:
+                return
             self.drawLeftAndRightSectionsOfScreen()
             self.drawBoard()
             self.drawButtons()

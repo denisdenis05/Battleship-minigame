@@ -6,6 +6,9 @@ class Ship:
         self.__idOfShip = idOfShip
         self.__hits = constants.STARTING_NUMBER_OF_HITS
 
+    def getId(self):
+        return self.__idOfShip
+
     def getName(self):
         return constants.NAME_OF_SHIPS[self.__idOfShip]
 
