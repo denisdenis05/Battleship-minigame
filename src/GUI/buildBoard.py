@@ -7,50 +7,226 @@ from src import constants
 class BuildBoardMenu:
     def __init__(self):
         pygame.init()
-        screen_info = pygame.display.Info()
-        self.__screenWidth, self.__screenHeight = screen_info.current_w, screen_info.current_h
-        self.__screenWindow = self.createDisplay()
-        self.__selector, self.__selectorRect = self.createSelector()
-        self.__tiles = self.createTiles()
 
-    def createDisplay(self):
-        pygame.display.set_caption("Game Menu")
-        return pygame.display.set_mode((self.__screenWidth, self.__screenHeight))
+        self.__checkmarkIcon = pygame.image.load(constants.LOCATION_OF_CHECKMARK_ICON)
+        self.__pointerIcon = pygame.image.load(constants.LOCATION_OF_POINTER_ICON)
 
-    def createSelector(self):
-        selectorWidth, selectorHeight = 50, 200  # Replace with your specific values
-        selectorRect = pygame.Rect(0, 0, selectorWidth, selectorHeight)
-        selectorRect.midleft = (0.2 * self.__screenWidth, 0.5 * self.__screenHeight)
-        selectorSurface = pygame.Surface(selectorRect.size, pygame.SRCALPHA)
-        slightlyTransparentRed = (255, 0, 0, 128)  # Adjust color as needed
-        pygame.draw.rect(selectorSurface, slightlyTransparentRed, selectorSurface.get_rect())
-        return selectorSurface, selectorRect
+        screenInfo = pygame.display.Info()
+        self.__screenWidth, self.__screenHeight = screenInfo.current_w, screenInfo.current_h
+        self.__screenWindow = pygame.display.set_mode((self.__screenWidth, self.__screenHeight))
 
-    def createTiles(self):
-        tile_size = 50  # Replace with your specific value
-        tiles = [[pygame.Rect(j * tile_size, i * tile_size, tile_size, tile_size) for j in range(10)] for i in
-                 range(10)]
-        return tiles
+        self.__leftSectionOfScreen = pygame.Rect(0, 0, self.__screenWidth * 2 // 5, self.__screenHeight)
+        self.__rightSectionOfScreen = pygame.Rect(self.__screenWidth * 2 // 5, 0, self.__screenWidth * 3 // 4, self.__screenHeight)
 
-    def drawSelector(self):
-        self.__screenWindow.blit(self.__selector, self.__selectorRect.topleft)
+        self.__gridRectangles = self.createGrid()
+        self.__buttons = self.createButtons()
+        self.__counterIfShipWasAdded = [constants.THIS_SHIP_WAS_NOT_ADDED] * constants.NUMBER_OF_SHIPS
 
-    def drawTiles(self):
-        tile_color = (0, 128, 255)  # Adjust color as needed
-        for row in self.__tiles:
-            for tile in row:
-                pygame.draw.rect(self.__screenWindow, tile_color, tile)
+        self.__menuTitle = self.createMenuTitle()
+
+        self.selectedShip = None
+        self.selectedShipDirection = None
+        self.selectedShipPosition = None
+
+
+    # ---------------------------------------
+    # VISUAL CREATORS DOWN HERE
+    # ---------------------------------------
+
+
+    @staticmethod
+    def createMenuTitle():
+        fontToUseInText = pygame.font.Font(None, constants.BOARD_BUILDER_TITLE_SIZE)
+        text = fontToUseInText.render(constants.BUILD_BOARD_CHOOSE_SHIPS_TEXT, True, constants.COLOR_BLACK)
+        return text
+
+    def createGrid(self):
+        tileSize = int(self.__rightSectionOfScreen.width * constants.TILE_DIMENSION_AS_PERCENTAGE_OF_SCREEN)
+        spaceNeededForTile = tileSize + constants.SPACING_BETWEEN_TILES
+
+        startPositionXAxis = self.__rightSectionOfScreen.centerx - (constants.GRID_OFFSET_X_AXIS * spaceNeededForTile) // constants.NUMBER_OF_SCREEN_SECTIONS
+        startPositionYAxis = self.__rightSectionOfScreen.centery - (constants.GRID_OFFSET_Y_AXIS * spaceNeededForTile) // constants.NUMBER_OF_SCREEN_SECTIONS
+
+        gridRectangles = [
+            [pygame.Rect(startPositionXAxis + column * spaceNeededForTile, startPositionYAxis + row * spaceNeededForTile, tileSize, tileSize) for column in range(constants.DIMENSION_OF_BOARD)]
+            for row in range(constants.DIMENSION_OF_BOARD)
+        ]
+        return gridRectangles
+
+    @staticmethod
+    def createButton(buttonText, topLeftCornerPosition):
+        topCoordinates = topLeftCornerPosition[constants.INDEX_OF_X_AXIS_VALUE]
+        leftCoordinates = topLeftCornerPosition[constants.INDEX_OF_Y_AXIS_VALUE]
+        fontSize = 20
+        fontToUseInText = pygame.font.Font(None, fontSize)
+        buttonWidth, buttonHeight = constants.MEDIUM_BUTTON_DIMENSIONS
+
+        buttonRectangle = pygame.Rect(leftCoordinates, topCoordinates, buttonWidth, buttonHeight)
+        button_surface = pygame.Surface(buttonRectangle.size, pygame.SRCALPHA)
+
+        text = fontToUseInText.render(buttonText, True, constants.COLOR_BLACK)
+        return buttonRectangle, button_surface, text
+
+    def createButtons(self):
+        buttons = {
+            "horizontalPatrolBoat": self.createButton("Horizontal Patrol Boat", constants.firstRowFirstButtonPosition),
+            "verticalPatrolBoat": self.createButton("Vertical Patrol Boat", constants.firstRowSecondButtonPosition),
+            "horizontalSubmarine": self.createButton("Horizontal Submarine", constants.secondRowFirstButtonPosition),
+            "verticalSubmarine": self.createButton("Vertical Submarine", constants.secondRowSecondButtonPosition),
+            "horizontalDestroyer": self.createButton("Horizontal Destroyer", constants.thirdRowFirstButtonPosition),
+            "verticalDestroyer": self.createButton("Vertical Destroyer", constants.thirdRowSecondButtonPosition),
+            "horizontalBattleship": self.createButton("Horizontal Battleship", constants.fourthRowFirstButtonPosition),
+            "verticalBattleship": self.createButton("Vertical Battleship", constants.fourthRowSecondButtonPosition),
+            "horizontalCarrier": self.createButton("Horizontal Carrier", constants.fifthRowFirstButtonPosition),
+            "verticalCarrier": self.createButton("Vertical Carrier", constants.fifthRowSecondButtonPosition)}
+        return buttons
+
+
+
+    # ---------------------------------------
+    # SCREEN DRAWERS DOWN HERE
+    # ---------------------------------------
+
+
+    def drawLeftAndRightSectionsOfScreen(self):
+        pygame.draw.rect(self.__screenWindow, constants.COLOR_RED, self.__leftSectionOfScreen)
+        pygame.draw.rect(self.__screenWindow, constants.COLOR_GREEN, self.__rightSectionOfScreen)
+
+
+    def colorButtonBackground(self, leftSideSectionSurface, shipId, buttonToDraw, buttonNumberToDraw):
+        buttonRectangle = self.__buttons[buttonToDraw][constants.INDEX_OF_BUTTON_RECTANGLE]
+        if self.__counterIfShipWasAdded[shipId] == constants.THIS_SHIP_WAS_ADDED:
+            pygame.draw.rect(leftSideSectionSurface, constants.COLOR_GREY, buttonRectangle)
+        elif self.selectedShip == shipId and self.selectedShipDirection == buttonNumberToDraw % constants.NUMBER_OF_BUTTONS_PER_ROW:
+            pygame.draw.rect(leftSideSectionSurface, constants.COLOR_GREEN, buttonRectangle)
+        else:
+            pygame.draw.rect(leftSideSectionSurface, constants.COLOR_WHITE, buttonRectangle)
+
+    def drawButtons(self):
+        leftSideSectionSurface = pygame.Surface(self.__leftSectionOfScreen.size, pygame.SRCALPHA)
+
+        for buttonNumberToDraw in range(constants.NUMBER_OF_SHIPS * constants.NUMBER_OF_BUTTONS_PER_ROW):
+            buttonToDraw = dict(enumerate(self.__buttons))[buttonNumberToDraw]
+            buttonRectangle = self.__buttons[buttonToDraw][constants.INDEX_OF_BUTTON_RECTANGLE]
+            buttonRectangleSurface = self.__buttons[buttonToDraw][constants.INDEX_OF_BUTTON_SURFACE]
+            textSurface = self.__buttons[buttonToDraw][constants.INDEX_OF_TEXT_SURFACE]
+            
+            shipId = buttonNumberToDraw // constants.NUMBER_OF_BUTTONS_PER_ROW
+            self.colorButtonBackground(leftSideSectionSurface, shipId, buttonToDraw, buttonNumberToDraw)
+
+            leftSideSectionSurface.blit(buttonRectangleSurface, buttonRectangle.topleft)
+            leftSideSectionSurface.blit(textSurface, textSurface.get_rect(center=buttonRectangle.center).topleft)
+            
+        for shipButtonRow in range(constants.NUMBER_OF_SHIPS):
+            if self.__counterIfShipWasAdded[shipButtonRow] == constants.THIS_SHIP_WAS_ADDED:
+                leftSideSectionSurface.blit(self.__checkmarkIcon, constants.buttonsIconPositions[shipButtonRow])
+            else:
+                leftSideSectionSurface.blit(self.__pointerIcon, constants.buttonsIconPositions[shipButtonRow])
+
+        self.__screenWindow.blit(leftSideSectionSurface, self.__leftSectionOfScreen.topleft)
+
+    def drawBoard(self):
+        for boardGridRow in self.__gridRectangles:
+            for positionOfRectangleToDraw in boardGridRow:
+                pygame.draw.rect(self.__screenWindow, constants.COLOR_LIGHT_BLUE, positionOfRectangleToDraw)
+
+
+    def drawMenuTitle(self):
+        self.__screenWindow.blit(self.__menuTitle, self.__menuTitle.get_rect(center=(self.__leftSectionOfScreen.centerx, self.__leftSectionOfScreen.top + constants.BOARD_BUILDER_TITLE_OFFSET)))
+
+
+    # ---------------------------------------
+    # LOGIC DOWN HERE
+    # ---------------------------------------
+
+
+    def getShipIdFromButtonName(self, buttonName):
+        for shipId, shipName in enumerate(self.__buttons):
+            if buttonName == shipName:
+                return shipId // constants.NUMBER_OF_BUTTONS_PER_ROW
+
+    def getShipDirectionFromButtonName(self, buttonName):
+        for shipId, shipName in enumerate(self.__buttons):
+            if buttonName == shipName:
+                return shipId % constants.NUMBER_OF_BUTTONS_PER_ROW
+
+    def onButtonPress(self, buttonName):
+        self.selectedShip = self.getShipIdFromButtonName(buttonName)
+        if self.__counterIfShipWasAdded[self.selectedShip] == constants.THIS_SHIP_WAS_ADDED:
+            return
+        self.selectedShipDirection = self.getShipDirectionFromButtonName(buttonName)
+
+
+    def onTilePress(self, tileCoordinates):
+        if self.selectedShip is None or self.selectedShipDirection is None:
+            return
+        self.selectedShipPosition = tileCoordinates
+        # TODO try to add ship here
+
+
+    # ---------------------------------------
+    # EVENT HANDLERS DOWN HERE
+    # ---------------------------------------
+
+
+    @staticmethod
+    def quitGame():
+        pygame.quit()
+        sys.exit()
+
+
+    def checkIfClickedOnButton(self, clickEvent):
+        for buttonName, buttonData in self.__buttons.items():
+            buttonRectangle, _, _ = buttonData
+            if buttonRectangle.collidepoint(clickEvent.pos):
+                return buttonName
+        return
+
+    def checkIfClickedOnGrid(self, clickEvent):
+        for row, rowRectangles in enumerate(self.__gridRectangles):
+            for column, gridRectangles in enumerate(rowRectangles):
+                if gridRectangles.collidepoint(clickEvent.pos):
+                    return column, row
+        return
+
+    def findWhatObjectWasClicked(self, clickEvent):
+        clickedOnButton = self.checkIfClickedOnButton(clickEvent)
+        if clickedOnButton:
+            return clickedOnButton
+        clickedOnGrid = self.checkIfClickedOnGrid(clickEvent)
+        if clickedOnGrid:
+            return clickedOnGrid
+        return
+
+
+    def handleMouseClick(self, eventToCheck):
+        objectThatUserClickedOn = self.findWhatObjectWasClicked(eventToCheck)
+        if objectThatUserClickedOn:
+            if type(objectThatUserClickedOn) == str:
+                buttonName = objectThatUserClickedOn
+                self.onButtonPress(buttonName)
+            elif type(objectThatUserClickedOn) == tuple:
+                coordinatesOfTile = objectThatUserClickedOn
+                self.onTilePress(coordinatesOfTile)
+
+    def checkEvent(self, eventToCheck):
+        if eventToCheck.type == pygame.QUIT:
+            self.quitGame()
+        if eventToCheck.type == pygame.MOUSEBUTTONDOWN:
+            self.handleMouseClick(eventToCheck)
+
+
+    def eventLoop(self):
+        for eventToCheck in pygame.event.get():
+            return self.checkEvent(eventToCheck)
 
     def gameLoop(self):
         while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+            self.eventLoop()
 
-            self.__screenWindow.fill((255, 255, 255))  # Fill the background with white
-            self.drawSelector()
-            self.drawTiles()
+            self.drawLeftAndRightSectionsOfScreen()
+            self.drawBoard()
+            self.drawButtons()
+            self.drawMenuTitle()
 
             pygame.display.flip()
-

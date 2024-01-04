@@ -5,11 +5,16 @@ from src import constants
 class StartMenu:
     def __init__(self):
         pygame.init()
-        screen_info = pygame.display.Info()
-        self.__screenWidth, self.__screenHeight = screen_info.current_w, screen_info.current_h
+        screenInformation = pygame.display.Info()
+        self.__screenWidth, self.__screenHeight = screenInformation.current_w, screenInformation.current_h
         self.__screenWindow = self.createDisplay()
         self.__backgroundImage = self.createBackgroundImage()
         self.__buttonObject, self.__buttonSurface, self.__buttonText = self.createPlayButton()
+
+
+    # ---------------------------------------
+    # VISUAL CREATORS DOWN HERE
+    # ---------------------------------------
 
 
     def createDisplay(self):
@@ -19,9 +24,8 @@ class StartMenu:
 
     def createBackgroundImage(self):
         try:
-            originalImage = pygame.image.load(constants.LOCATION_OF_BACKGROUND_IMAGE_RELATIVE_TO_START)
+            originalImage = pygame.image.load(constants.LOCATION_OF_BACKGROUND_IMAGE)
         except pygame.error:
-            print("Error loading image:")
             sys.exit()
         originalImageWidth, originalImageHeight = originalImage.get_size()
         imageAspectRatio = originalImageWidth / originalImageHeight
@@ -37,9 +41,12 @@ class StartMenu:
         buttonRectangle = pygame.Rect((self.__screenWidth - buttonWidth) // 2, (self.__screenHeight - buttonHeight) // 2, buttonWidth, buttonHeight)
         button_surface = pygame.Surface(buttonRectangle.size, pygame.SRCALPHA)
 
-        blackColor = (0, 0, 0)
-        text = fontToUseInText.render("PLAY GAME", True, blackColor)
+        text = fontToUseInText.render("PLAY GAME", True, constants.COLOR_BLACK)
         return buttonRectangle, button_surface, text
+
+    # ---------------------------------------
+    # SCREEN DRAWERS DOWN HERE
+    # ---------------------------------------
 
 
     def drawBackgroundImage(self):
@@ -52,16 +59,38 @@ class StartMenu:
         self.__screenWindow.blit(self.__buttonText, self.__buttonText.get_rect(center=self.__buttonObject.center))
 
 
+    # ---------------------------------------
+    # EVENT HANDLERS DOWN HERE
+    # ---------------------------------------
+
+
+    @staticmethod
+    def quitGame():
+        pygame.quit()
+        sys.exit()
+
+    def mouseButtonIsClicked(self, event):
+        if self.__buttonObject.collidepoint(event.pos):
+            goToTheNextMenu = True
+            return goToTheNextMenu
+
+
+    def checkEvent(self, eventToCheck):
+        if eventToCheck.type == pygame.QUIT:
+            self.quitGame()
+        elif eventToCheck.type == pygame.MOUSEBUTTONDOWN:
+            return self.mouseButtonIsClicked(eventToCheck)
+
+    def eventLoop(self):
+        for event in pygame.event.get():
+            return self.checkEvent(event)
+
+
     def gameLoop(self):
         while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.__buttonObject.collidepoint(event.pos):
-                        return
-
+            goToTheNextMenu = self.eventLoop()
+            if goToTheNextMenu:
+                return
             self.drawBackgroundImage()
             self.drawPlayButton()
 
