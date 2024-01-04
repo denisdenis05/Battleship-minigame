@@ -136,4 +136,3 @@ BUILD_BOARD_CHOOSE_SHIPS_TEXT = "Choose each type of ship and position it on boa
 # ---------------------------------------
 
 VALUE_TO_ADD_SO_LAST_ELEMENT_IS_CONSIDERED = 1
-
