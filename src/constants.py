@@ -23,6 +23,9 @@ INDEX_OF_BUTTON_RECTANGLE = 0
 INDEX_OF_BUTTON_SURFACE = 1
 INDEX_OF_TEXT_SURFACE = 2
 
+INDEX_OF_SHIP_HIT_BY_USER = 0
+INDEX_OF_SHIP_HIT_BY_COMPUTER = 1
+
 
 # ---------------------------------------
 # LOCATIONS
@@ -31,6 +34,10 @@ INDEX_OF_TEXT_SURFACE = 2
 LOCATION_OF_BACKGROUND_IMAGE = "src/images/background_image.jpg"
 LOCATION_OF_CHECKMARK_ICON = "src/images/checkmark_icon.png"
 LOCATION_OF_POINTER_ICON = "src/images/pointer_icon.png"
+LOCATION_OF_HIT_ICON = "src/images/hit_icon.png"
+LOCATION_OF_ALMOST_HIT_ICON = "src/images/almost_hit_icon.png"
+LOCATION_OF_WON_IMAGE = "src/images/won.jpeg"
+LOCATION_OF_LOST_IMAGE = "src/images/lost.jpg"
 
 
 # ---------------------------------------
@@ -74,9 +81,10 @@ NUMBER_OF_SCREEN_SECTIONS = 2
 
 TILE_DIMENSION_AS_PERCENTAGE_OF_SCREEN = 0.05
 SPACING_BETWEEN_TILES = 5
-GRID_OFFSET_X_AXIS = 15
+GRID_OFFSET_X_AXIS = 10
 GRID_OFFSET_Y_AXIS = 10
 
+GAME_UPDATES_TEXT_OFFSET = -40
 BOARD_BUILDER_TITLE_OFFSET = 50
 BOARD_BUILDER_TITLE_SIZE = 30
 
@@ -114,10 +122,11 @@ COLOR_LIGHT_BLUE = (0, 0, 128)
 COLOR_GREEN = (0, 255, 0)
 COLOR_RED = (255, 0, 0)
 COLOR_YELLOW = (255, 255, 0)
+COLOR_LIGHT_GREY = (20, 60, 99)
 
 COLOR_OF_TILES_FOR_SHIP = {
     0: COLOR_BLACK,
-    1: COLOR_RED,
+    1: COLOR_LIGHT_GREY,
     2: COLOR_WHITE,
     3: COLOR_GREY,
     4: COLOR_YELLOW
@@ -127,12 +136,16 @@ COLOR_OF_TILES_FOR_SHIP = {
 # TEXTS
 # ---------------------------------------
 
-
+ATTACK_COMPUTERS_SHIP_TEXT = "Click on a tile to attack the computer's ship"
 BUILD_BOARD_CHOOSE_SHIPS_TEXT = "Choose each type of ship and position it on board"
 
+SHIP_HIT_UPDATE_TEXT = " hit the ship: "
 
 # ---------------------------------------
 # MISCELLANEOUS
 # ---------------------------------------
 
 VALUE_TO_ADD_SO_LAST_ELEMENT_IS_CONSIDERED = 1
+
+COMPUTER_WON = 0
+USER_WON = 1

@@ -1,12 +1,28 @@
 from src.GUI.buildBoard import BuildBoardMenu
+from src.GUI.endingScreen import EndingMenu
+from src.GUI.playingMenu import GameWindow
 from src.GUI.startMenu import StartMenu
-# from src.GUI.gameWindow import GameWindow
+from src.services.services import Services
 
-start = StartMenu()
-start.gameLoop()
 
-buildBoard = BuildBoardMenu()
-buildBoard.gameLoop()
 
-# actualGame = GameWindow()
-# actualGame.gameLoop()
+
+def main():
+    services = Services()
+
+    start = StartMenu()
+    start.gameLoop()
+
+
+    services.buildBoardForComputer()
+    buildBoard = BuildBoardMenu(services)
+    buildBoard.gameLoop()
+
+    actualGame = GameWindow(services)
+    gameResult = actualGame.gameLoop()
+
+    endingScreen = EndingMenu(gameResult)
+    endingScreen.gameLoop()
+
+
+main()

@@ -2,12 +2,11 @@
 import pygame
 import sys
 from src import constants
-from src.services.services import Services
 
 
 class BuildBoardMenu:
-    def __init__(self):
-        self.__services = Services()
+    def __init__(self, services):
+        self.__services = services
         pygame.init()
 
         self.__checkmarkIcon = pygame.image.load(constants.LOCATION_OF_CHECKMARK_ICON)
