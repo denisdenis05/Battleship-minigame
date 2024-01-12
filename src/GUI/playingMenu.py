@@ -86,11 +86,20 @@ class GameWindow:
 
 
     # Uncomment this to not see the computer board
-    # def drawComputerBoard(self):
-    #     for lineNumber, boardGridRow in enumerate(self.__computerGridRectangles):
-    #         for columnNumber, positionOfRectangleToDraw in enumerate(boardGridRow):
-    #             pygame.draw.rect(self.__screenWindow, constants.COLOR_LIGHT_BLUE, positionOfRectangleToDraw)
-    def drawComputerBoard(self):
+    def drawComputerBoard_STANDARD(self):
+        for lineNumber, boardGridRow in enumerate(self.__computerGridRectangles):
+            for columnNumber, positionOfRectangleToDraw in enumerate(boardGridRow):
+                pygame.draw.rect(self.__screenWindow, constants.COLOR_LIGHT_BLUE, positionOfRectangleToDraw)
+                positionOfTileOnGrid = (columnNumber, lineNumber)
+                typeOfShipOnTheTile = self.__services.checkIfTileIsOccupiedOnComputerBoard(positionOfTileOnGrid)
+                if typeOfShipOnTheTile == constants.EMPTY_TILE:
+                    if self.__services.checkIfTileIsHitOnComputerBoard(positionOfTileOnGrid) != constants.EMPTY_TILE:
+                        self.__screenWindow.blit(self.__almostHitIcon, positionOfRectangleToDraw)
+                else:
+                    if self.__services.checkIfTileIsHitOnComputerBoard(positionOfTileOnGrid) != constants.EMPTY_TILE:
+                        self.__screenWindow.blit(self.__hitIcon, positionOfRectangleToDraw)
+
+    def drawComputerBoard_DEBUG_MODE(self):
         for lineNumber, boardGridRow in enumerate(self.__computerGridRectangles):
             for columnNumber, positionOfRectangleToDraw in enumerate(boardGridRow):
                 positionOfTileOnGrid = (columnNumber, lineNumber)
@@ -105,6 +114,12 @@ class GameWindow:
                                      positionOfRectangleToDraw)
                     if self.__services.checkIfTileIsHitOnComputerBoard(positionOfTileOnGrid) != constants.EMPTY_TILE:
                         self.__screenWindow.blit(self.__hitIcon, positionOfRectangleToDraw)
+
+    def drawComputerBoard(self):
+        if constants.DEBUG_MODE is True:
+            self.drawComputerBoard_DEBUG_MODE()
+        else:
+            self.drawComputerBoard_STANDARD()
 
 
 
@@ -152,6 +167,7 @@ class GameWindow:
     # ---------------------------------------
     # EVENT HANDLERS DOWN HERE
     # ---------------------------------------
+
 
     @staticmethod
     def quitGame():

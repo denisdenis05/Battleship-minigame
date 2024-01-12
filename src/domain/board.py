@@ -1,3 +1,5 @@
+import texttable
+
 from src import constants
 
 
@@ -72,4 +74,26 @@ class Board:
             if self.__addedShips[ship].getHits() != self.__addedShips[ship].getLength():
                 return False
         return True
+
+    def __str__(self):
+        displayBoard = texttable.Texttable()
+        first_row = [' ']
+        for column in range(constants.DIMENSION_OF_BOARD):
+            first_row.append(chr(ord('A') + column))
+        displayBoard.add_row(first_row)
+
+        for index in range(constants.DIMENSION_OF_BOARD):
+            row = [str(index + 1)]
+            rowContent = []
+            for indexOfColumn in range(constants.DIMENSION_OF_BOARD):
+                if self.__boardTiles[index][indexOfColumn] != constants.EMPTY_TILE:
+                    rowContent.append("*")
+                elif self.__shipsOnBoard[index][indexOfColumn] == constants.EMPTY_TILE:
+                    rowContent.append(" ")
+                else:
+                    rowContent.append(self.__shipsOnBoard[index][indexOfColumn])
+            row.extend(rowContent)
+            displayBoard.add_row(row)
+
+        return displayBoard.draw()
 

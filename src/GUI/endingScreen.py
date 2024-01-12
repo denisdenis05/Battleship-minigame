@@ -56,7 +56,16 @@ class EndingMenu:
         pygame.quit()
         sys.exit()
 
+    def checkEvent(self, eventToCheck):
+        if eventToCheck.type == pygame.QUIT:
+            self.quitGame()
+
+    def eventLoop(self):
+        for event in pygame.event.get():
+            return self.checkEvent(event)
+
     def gameLoop(self):
         while True:
             self.drawBackgroundImage()
             pygame.display.flip()
+            self.eventLoop()

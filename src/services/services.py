@@ -8,11 +8,13 @@ class Services:
     def __init__(self):
         self.__userBoard = Board()
         self.__computerBoard = Board()
+        self.__computerHitsAI = []
 
     def addShipToUserBoard(self, shipId, startingPosition: tuple, direction: int):
         return self.addShipToBoard(shipId, startingPosition, direction, self.__userBoard)
 
-    def addShipToBoard(self, shipId, startingPosition: tuple, direction: int, board: Board):
+    @staticmethod
+    def addShipToBoard(shipId, startingPosition: tuple, direction: int, board: Board):
         shipLength = constants.LENGTH_OF_SHIPS[shipId]
         startingPositionLine = startingPosition[constants.INDEX_OF_LINE_COORDINATES]
         startingPositionColumn = startingPosition[constants.INDEX_OF_COLUMN_COORDINATES]
@@ -50,17 +52,58 @@ class Services:
             if addedToComputerBoard:
                 shipId = shipId + 1
 
+    @staticmethod
+    def addTwoTuples(firstTupleToAdd, secondTupleToAdd):
+        resultTuple = tuple(elementToAddFromFirstTuple + elementToAddFromSecondTuple
+                            for elementToAddFromFirstTuple, elementToAddFromSecondTuple in zip(firstTupleToAdd, secondTupleToAdd))
+        return resultTuple
 
-    def handleHitOnUserBoard(self):
+    @staticmethod
+    def notOutsideBoard(neighboringTile):
+        column = neighboringTile[constants.INDEX_OF_COLUMN_COORDINATES]
+        line = neighboringTile[constants.INDEX_OF_LINE_COORDINATES]
+        return constants.DIMENSION_OF_BOARD > column >= constants.MINIMUM_POSITION_ON_BOARD and constants.DIMENSION_OF_BOARD > line >= constants.MINIMUM_POSITION_ON_BOARD
+
+    def handleHitStackAI(self, positionThatWasHit):
+        if self.checkIfTileIsOccupiedOnUserBoard(positionThatWasHit) != constants.EMPTY_TILE:
+            neighboringTiles = [self.addTwoTuples(positionThatWasHit, constants.COORDINATES_OF_NORTH_TILE),
+                                self.addTwoTuples(positionThatWasHit, constants.COORDINATES_OF_SOUTH_TILE),
+                                self.addTwoTuples(positionThatWasHit, constants.COORDINATES_OF_EAST_TILE),
+                                self.addTwoTuples(positionThatWasHit, constants.COORDINATES_OF_WEST_TILE)]
+            for neighboringTile in neighboringTiles:
+                if self.notOutsideBoard(neighboringTile) and self.__userBoard.checkIfTileWasHit(neighboringTile) == constants.EMPTY_TILE:
+                    self.__computerHitsAI.append(neighboringTile)
+
+
+    def hitRandomTileAI(self):
         hitTile = False
         while not hitTile:
             line = randint(0, 9)
             column = randint(0, 9)
-            positionOfTile = (line, column)
-            if self.__userBoard.checkIfTileWasHit(positionOfTile) == constants.EMPTY_TILE:
-                self.__userBoard.hitTile(positionOfTile)
-                hitTile = True
-                return self.checkIfTileIsOccupiedOnUserBoard(positionOfTile)
+            tileCoordinatesToHit = (line, column)
+            if self.__userBoard.checkIfTileWasHit(tileCoordinatesToHit) == constants.EMPTY_TILE:
+                self.__userBoard.hitTile(tileCoordinatesToHit)
+                self.handleHitStackAI(tileCoordinatesToHit)
+                return self.checkIfTileIsOccupiedOnUserBoard(tileCoordinatesToHit)
+
+    def hitTileNearOtherSuccessfullyHitTiles(self):
+        tileCoordinatesToHit = self.__computerHitsAI[constants.INDEX_OF_FIRST_TILE_THAT_SHOULD_BE_HIT_BY_AI]
+        if self.__userBoard.checkIfTileWasHit(tileCoordinatesToHit) == constants.EMPTY_TILE:
+            self.__userBoard.hitTile(tileCoordinatesToHit)
+            self.__computerHitsAI.pop(constants.INDEX_OF_FIRST_TILE_THAT_SHOULD_BE_HIT_BY_AI)
+            self.handleHitStackAI(tileCoordinatesToHit)
+            return self.checkIfTileIsOccupiedOnUserBoard(tileCoordinatesToHit)
+        else:
+            self.__computerHitsAI.pop(constants.INDEX_OF_FIRST_TILE_THAT_SHOULD_BE_HIT_BY_AI)
+            return self.hitTileNearOtherSuccessfullyHitTiles()
+
+
+    def handleHitOnUserBoard(self):
+        if len(self.__computerHitsAI) == 0:
+            return self.hitRandomTileAI()
+        else:
+            return self.hitTileNearOtherSuccessfullyHitTiles()
+
 
 
     def checkIfTileIsHitOnComputerBoard(self, positionOfTile):
@@ -79,8 +122,8 @@ class Services:
 
 
     def checkIfGameEnded(self):
+        if self.__computerBoard.isGameOver():
+            return constants.USER_WON
         if self.__userBoard.isGameOver():
             return constants.COMPUTER_WON
-        elif self.__computerBoard.isGameOver():
-            return constants.USER_WON
         return
