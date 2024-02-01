@@ -1,4 +1,4 @@
-# Mini=game Battleship
+# Mini-game Battleship
 
 ### A mini-project made for uni
 
